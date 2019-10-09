@@ -1,6 +1,11 @@
 CC=g++
 
-all: sums_by_cols sums_by_rows
+all:
+	run
+
+run: sums_by_cols sums_by_rows
+	./sums_by_cols
+	./sums_by_rows
 
 sums_by_cols: sum_by_cols.o
 	$(CC) -o sums_by_cols  sum_by_cols.o -O2
