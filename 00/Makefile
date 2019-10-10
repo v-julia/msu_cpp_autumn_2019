@@ -17,6 +17,4 @@ sums_by_rows.o: sum_by_rows.cpp sums.h Timer.h
 	$(CC) -c sum_by_rows.cpp --std=c++14
  
 clean:
-	rm -rf *.o
-#	rm -rf *.o sums_by_cols
-#	rm -rf *.o sums_by_rows
+	rm -rf *.o sums_by_cols sums_by_rows
