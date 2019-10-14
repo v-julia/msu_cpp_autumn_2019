@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
         return 1;
     }
     // первый агрумент пишем в result
-    size_t pos = 1;
+    size_t pos = 0;
     int result;
     try {
         result = std::stoi(inp_expr, &pos, 10);// запись в result

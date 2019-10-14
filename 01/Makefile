@@ -1,6 +1,6 @@
 CC=g++
 
-all: run
+all: run test
 test: test.py
 	python3 test.py
 
