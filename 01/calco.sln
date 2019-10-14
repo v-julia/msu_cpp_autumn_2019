@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calco", "calco.vcxproj", "{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Debug|x64.ActiveCfg = Debug|x64
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Debug|x64.Build.0 = Debug|x64
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Debug|x86.ActiveCfg = Debug|Win32
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Debug|x86.Build.0 = Debug|Win32
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Release|x64.ActiveCfg = Release|x64
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Release|x64.Build.0 = Release|x64
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Release|x86.ActiveCfg = Release|Win32
+		{9CDE6D6D-B2F4-4202-A013-3A29B4B9F01E}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {80CF355B-FD04-49BD-895F-3FBCF7F7E40C}
+	EndGlobalSection
+EndGlobal
