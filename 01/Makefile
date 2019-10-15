@@ -13,3 +13,4 @@ calco: calco.o
 
 clean:
 	rm -rf *.o calco
+
