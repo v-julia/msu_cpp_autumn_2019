@@ -1,101 +1,154 @@
 
 #include <iostream>
-#include <string>
-#include <algorithm>
-#include <cctype>
+#include <sstream>
+
+enum token_value
+{
+    NUMBER,
+    END,
+    PLUS='+',
+    MINUS='-',
+    MUL='*',
+    DIV='/',
+};
+
+std::stringstream cin;           // входной поток символов в вычисляемом выражении из строки агрументов
+token_value       curr_tok;      // текущий токен (число,знак операции или признак окончания)
+
+void  check_input_args(int argc, char* argv[]);
+int   term();
+int   expr();
+int   get_number();
+void  get_oper();
+
+
 
 int main(int argc, char* argv[])
 {
+    check_input_args(argc, argv); // получить входной поток символов cin из командной строки
 
-    if (argc != 2) {
-        std::cout << "invalid expression!";
-        return 1;
-    }
-    
-    std::string inp_expr(argv[1]); // входная строка содержит вычисляемое выражение
-   
-    
-    inp_expr.erase(std::remove(inp_expr.begin(), inp_expr.end(), ' '),inp_expr.end());
-    
-
-    
-    int sz_inp = inp_expr.size(); // кол-во символов в выражении без пробелов
-    std::string operations = "+-*/"; // допустимые операции
-    int rank_stack = 0; // сколько ожидающих операций в стэке
-    int prev_arg = 0; // предыдущий аргумент
-    int curr_arg = 0; // текущий аргумент
-    char prev_op = '0'; // предыдущая операция
-    char curr_op = '0';
-
-    
-    // проверка на правильность начала строки
-    if (!((isdigit(inp_expr[0]) != 0) || (inp_expr[0] == '-'))) {
-        std::cout << "invalid expression!";
-        return 1;
-    }
-    // первый агрумент пишем в result
-    size_t pos = 0;
-    int result;
-    try {
-        result = std::stoi(inp_expr, &pos, 10);// запись в result
-    }
-    catch (std::exception) {
-        std::cout << "invalid expression!";
-        return 1;
-    }
-    // дальше цикл считывания знака операции и очередного аргумента
-    while (pos < sz_inp) {
-        curr_op = inp_expr[pos++]; // очередная операция
-         // если ее нет в списке допустимых, то выдать ошибку
-        if (operations.find(curr_op) < 0) {
-            std::cout << "invalid expression!";
-            return 1;
-        }
-        // считать очередной аргумент
-       // при этом - проверить правильность первого символа
-        if (!((('0' <= inp_expr[pos]) && (inp_expr[pos] <= '9')) || (inp_expr[pos] == '-'))) {
-            std::cout << "invalid expression!";
-            return 1;
-        }
-        size_t dpos = 0;
-        try {
-            curr_arg = std::stoi(inp_expr.substr(pos), &dpos, 10);// запись в result
-            pos += dpos;
-        }
-        catch (std::exception) {
-            std::cout << "invalid expression!";
-            return 1;
-        }
-        //если очередная операция = * или /, то выполнить расчет
-        if (curr_op == '*' || curr_op == '/') {
-            if (rank_stack == 0) {
-                result = (curr_op == '*') ? result*curr_arg : result / curr_arg;
-            }
-            else {
-                prev_arg = (curr_op == '*') ? prev_arg*curr_arg : prev_arg / curr_arg;
-            }
-        }
-        else {
-            //если очередная операция = + или -
-            if (rank_stack == 0) {
-                // если предыдущих операций не было, то положить в стек
-                prev_arg = curr_arg;
-                prev_op = curr_op;
-                rank_stack = 1;
-            }
-            else {
-                // иначе - выполнить предыдущую операцию
-                result = (prev_op == '+') ? result + prev_arg : result - prev_arg;
-                // и запомнить текущий результат
-                prev_op = curr_op;
-                prev_arg = curr_arg;
-            }
-        }
-    }
-    // заполнить result
-    if (rank_stack == 1) {
-        result = (prev_op == '+') ? result + prev_arg : result - prev_arg;
-    }
-    std::cout << result;
+    std::cout << expr();          // вычислить значение выражения
+    return 0;
 }
+
+// проверка входных аргументов
+void check_input_args(int argc, char* argv[])
+{
+    if ( argc != 2 ) {
+        std::cout << "input error - no expression!";
+        exit(1);
+    }
+    cin = std::stringstream(argv[1]);
+}
+
+// обработка всех операций + или -
+int expr()
+{
+    int left = term(); // term выполнит серию подряд идущих операций * или /
+    for ( ;;)
+        switch ( curr_tok ) { // значение curr_tok уже было получено в term() и оно может быть только + или -
+        case PLUS:
+            left += term(); // случай '+'
+            break;
+        case MINUS:
+            left -= term(); // случай '-'
+            break;
+        default:
+            return left;
+        }
+}
+
+// обработка блока из операций * или /
+int term()
+{
+    int left = get_number();
+    for ( ;;) {
+        get_oper(); // запишет в глобальную переменную curr_tok вид прочитанной операции
+        switch ( curr_tok ) {
+        case MUL: // '*'
+            left *= get_number();
+            break;
+        case DIV: //  '/'
+        {
+            int d = get_number();
+            if ( d == 0 ) {
+                std::cout << "divide by zero in term()!";
+                exit(5);
+            }
+            left /= d;
+            break;
+        }
+        default:
+            return left;
+        }
+    }
+}
+
+// считывает числа
+int get_number()
+{
+    char ch;
+    int num;
+
+    do { // пропускает пробелы после знака операции
+        if ( !cin.get(ch) ) {
+            std::cout << "invalid arg in get_number()!";
+            exit(2);
+            // если после знака операции нет числа - то ошибка
+        }
+    } while ( isspace(ch) );
+
+    if ( isdigit(ch) ) {
+        cin.putback(ch);
+        cin >> num;
+        curr_tok=NUMBER; // в принципе обозначать curr_tok, когда он NUMBER для этого примера необязательно
+        return num;
+    }
+    else if ( ch == '-' ) { // унарный минус
+        return -get_number();
+    }
+    else {
+        std::cout << "invalid token in get_number()!";
+        exit(3);
+        // если после знака операции не число, то тоже ошибка
+    }
+}
+
+// считывает арифметические операции
+void get_oper()
+{
+    char ch;
+    do { // пропускает пробелы после числа
+        if ( !cin.get(ch) ) {
+            curr_tok = END;
+            return;
+            // здесь после числа может не быть операции, поэтому - признак окончания расчетов
+        }
+    } while ( isspace(ch) );
+    
+    switch ( ch ) {
+    case '*':
+    case '/':
+    case '+':
+    case '-':
+        curr_tok=token_value(ch);
+        break;
+    default:
+        std::cout << "invalid operation in get_oper()!";
+        exit(4);
+        // здесь тоже - после числа должен быть знак операции, иначе - выход с ошибкой
+    }
+}
+
+
+// некоторые примеры
+// 1) ./calco "    25/5*6+7 +-   3   /1+20*3*4  /  3   /   4      -1"  =  53 
+// 2) ./calco "  35 / 5 * 3-1 +-10*  9/3/   15      -66/11/   2/3   "  =  17 
+// с ошибками
+// 1)  ./calco = input error - arg count != 1!, retcode=1
+// 2)  ./calco "1+  2+" = invalid arg in get_number()!, retcode=2
+// 3)  ./calco "1+  2+a" = invalid token in get_number()!, retcode=3
+// 4)  ./calco "2*  2 2 + 2"  = invalid operation in get_oper()!, retcode=4
+// 5)  ./calco "2*  2/ 2 + 2/0+5" = invalid token in get_number()!, retcode=5
+
 
