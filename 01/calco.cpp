@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <sstream>
 
@@ -27,7 +28,10 @@ int main(int argc, char* argv[])
     check_input_args(argc, argv, sexpr, numerr);      // получить входной поток символов из командной строки
 
     if ( numerr == 0 ) {
-        std::cout << expr(sexpr, numerr);             // вычислить значение выражения
+        int res = expr(sexpr, numerr);             // вычислить значение выражения
+        if ( numerr == 0 ) {
+            std::cout << res;
+            }
     }
 
     return numerr;
@@ -162,4 +166,16 @@ void get_oper(std::stringstream& sexpr, int& numerr, token_value& curr_tok)
         // здесь тоже - после числа должен быть знак операции, иначе - выход с ошибкой
     }
 }
+
+
+// некоторые примеры
+// 1) ./calco "    25/5*6+7 +-   3   /1+20*3*4  /  3   /   4      -1"  =  53 
+// 2) ./calco "  35 / 5 * 3-1 +-10*  9/3/   15      -66/11/   2/3   "  =  17 
+// с ошибками
+// 1)  ./calco = input error - arg count != 1!, retcode=1
+// 2)  ./calco "1+  2+" = invalid arg in get_number()!, retcode=2
+// 3)  ./calco "1+  2+a" = invalid token in get_number()!, retcode=3
+// 4)  ./calco "2*  2 2 + 2"  = invalid operation in get_oper()!, retcode=4
+// 5)  ./calco "2*  2/ 2 + 2/0+5" = invalid token in get_number()!, retcode=5
+
 
