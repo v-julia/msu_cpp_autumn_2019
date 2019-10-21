@@ -12,5 +12,5 @@ alloc_test: aloc_main.cpp LinearAllocator.cpp
 	$(CC) -o alloc_test  LinearAllocator.cpp aloc_main.cpp -O2 --std=c++14
 
 clean:
-	rm -rf *.o lin_alloc
+	rm -rf *.o alloc_test
 
