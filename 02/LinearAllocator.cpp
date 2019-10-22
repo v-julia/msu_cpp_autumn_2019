@@ -2,12 +2,12 @@
 
 LinearAllocator::LinearAllocator(std::size_t maxSize)
 {
-    try {
-        pstart = static_cast<char*>( std::malloc(maxSize) );
+
+    pstart = static_cast<char*>( std::malloc(maxSize) );
+    if (pstart != nullptr) {
         pend = pstart+( maxSize - 1 );
     }
-    catch ( ... ) {
-        pstart = nullptr;
+    else {
         pend = nullptr;
     }
     pcurr = pstart;
