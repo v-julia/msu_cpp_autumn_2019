@@ -17,22 +17,28 @@ private:
         };
         ~c_row()
         {
-           delete[] row;
+            delete[] row;
         };
+        int& operator[](size_t i)
+        {
+            if ( i < 0 || i >= col_count ) throw std::out_of_range("");
+            return row[i];
+        }
         const int& operator[](size_t i) const
         {
             if ( i < 0 || i >= col_count ) throw std::out_of_range("");
             return row[i];
         }
         size_t getCols() { return col_count; }
-        
-        void set(size_t i, int val) {
+
+        void set(size_t i, int val)
+        {
             if ( i < 0 || i >= col_count ) throw std::out_of_range("");
             row[i]=val;
         }
-        
-            
-        
+
+
+
     private:
         int* row;
         size_t col_count;
@@ -74,9 +80,16 @@ public:
             return 0;
         }
     }
+
+    c_row& operator[](size_t i)
+    {
+        if ( i < 0 || i >= row_count ) throw std::out_of_range("");
+        return matr[i];
+    }
+
     const c_row& operator[](size_t i) const
     {
-        if (i<0 || i >= row_count ) throw std::out_of_range("");
+        if ( i < 0 || i >= row_count ) throw std::out_of_range("");
         return matr[i];
     }
 
@@ -97,7 +110,7 @@ public:
         }
         return *this;
     }
-    
+
     Matrix& operator+=(const int& c)
     {
         size_t cols=getCols();

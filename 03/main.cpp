@@ -17,14 +17,16 @@ int main()
     size_t gcols=mt.getCols();
     std::cout << "mt.getRows=" << grows << "; mt.getCols=" << gcols << ";\n";
 
+    //  здесь работает версия оператора [][]   c_row& operator[](size_t i)
+
     int k=0;
     for ( size_t i=0; i < rows; ++i ) {
         for ( size_t j=0; j < cols; ++j ) {
-            mt.set(i, j, k);
+            mt[i][j]=k;
             k+=1;
         }
     }
-    
+
 
     std::cout << "\n";
     std::cout << "Matrix mt:\n";
@@ -42,7 +44,7 @@ int main()
     mt+=g;
 
     std::cout << "\n";
-    std::cout << "Matrix mt+=(C="<< g << "):\n";
+    std::cout << "Matrix mt+=(C=" << g << "):\n";
     for ( size_t i=0; i < rows; ++i ) {
         for ( size_t j=0; j < cols; ++j ) {
             int u=mt[i][j];
@@ -52,8 +54,8 @@ int main()
 
     }
     std::cout << "\n";
-    
-    
+
+
     int c=10;
     mt*=c;
 
@@ -71,7 +73,7 @@ int main()
 
     for ( size_t i=0; i < rows; ++i ) {
         for ( size_t j=0; j < cols; ++j ) {
-            mt_eq.set(i,j, mt[i][j]);
+            mt_eq.set(i, j, mt[i][j]);
             mt_ne.set(i, j, -5);
         }
     }
@@ -97,7 +99,9 @@ int main()
 
     }
     std::cout << "\n";
-    
+
+    // Здесь сработает оператор  [][] const c_row& operator[](size_t i) const
+
     bool test_eq_mt_vs_mt_eq = ( mt == mt_eq );
     bool test_ne_mt_vs_mt_eq = ( mt != mt_eq );
     bool test_eq_mt_vs_mt_ne = ( mt == mt_ne );
