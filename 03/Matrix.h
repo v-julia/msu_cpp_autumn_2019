@@ -19,13 +19,20 @@ private:
         {
            delete[] row;
         };
-        int& operator[](size_t i) const
+        const int& operator[](size_t i) const
         {
             if ( i < 0 || i >= col_count ) throw std::out_of_range("");
             return row[i];
         }
         size_t getCols() { return col_count; }
-
+        
+        void set(size_t i, int val) {
+            if ( i < 0 || i >= col_count ) throw std::out_of_range("");
+            row[i]=val;
+        }
+        
+            
+        
     private:
         int* row;
         size_t col_count;
@@ -67,30 +74,42 @@ public:
             return 0;
         }
     }
-    c_row& operator[](size_t i) const
+    const c_row& operator[](size_t i) const
     {
         if (i<0 || i >= row_count ) throw std::out_of_range("");
         return matr[i];
     }
 
+    void set(size_t i, size_t j, int val)
+    {
+        if ( i < 0 || i >= row_count ) throw std::out_of_range("");
+        matr[i].set(j, val);
+    }
+
     Matrix& operator*=(const int& c)
     {
         size_t cols=getCols();
-        for ( size_t j=0; j < row_count; ++j ) {
-            for ( size_t i=0; i < cols; ++i ) {
-                matr[i][j]*=c;
+        for ( size_t i=0; i < row_count; ++i ) {
+            for ( size_t j=0; j < cols; ++j ) {
+                int k=matr[i][j];
+                matr[i].set(j, k * c);
             }
         }
+        return *this;
     }
+    
     Matrix& operator+=(const int& c)
     {
         size_t cols=getCols();
-        for ( size_t j=0; j < row_count; ++j ) {
-            for ( size_t i=0; i < cols; ++i ) {
-                matr[i][j]*=c;
+        for ( size_t i=0; i < row_count; ++i ) {
+            for ( size_t j=0; j < cols; ++j ) {
+                int k=matr[i][j];
+                matr[i].set(j, k + c);
             }
         }
+        return *this;
     }
+
     bool operator!=(const Matrix& otherM) const
     {
         if ( this == &otherM ) return true;

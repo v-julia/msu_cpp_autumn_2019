@@ -20,7 +20,7 @@ int main()
     int k=0;
     for ( size_t i=0; i < rows; ++i ) {
         for ( size_t j=0; j < cols; ++j ) {
-            mt[i][j]=k;
+            mt.set(i, j, k);
             k+=1;
         }
     }
@@ -38,16 +38,27 @@ int main()
     }
     std::cout << "\n";
 
-    int c=10;
-    for ( size_t i=0; i < rows; ++i ) {
-        for ( size_t j=0; j < cols; ++j ) {
-            mt[i][j]*=c;
-        }
-    }
-
+    int g=3;
+    mt+=g;
 
     std::cout << "\n";
-    std::cout << "Matrix mt*(C="<< c << "):\n";
+    std::cout << "Matrix mt+=(C="<< g << "):\n";
+    for ( size_t i=0; i < rows; ++i ) {
+        for ( size_t j=0; j < cols; ++j ) {
+            int u=mt[i][j];
+            std::cout << std::setw(6) << "mt[" << std::setw(2) << i << "][" << std::setw(2) << j << "]=" << std::setw(3) << u << " ";
+        }
+        std::cout << "\n";
+
+    }
+    std::cout << "\n";
+    
+    
+    int c=10;
+    mt*=c;
+
+    std::cout << "\n";
+    std::cout << "Matrix mt*=(C=" << c << "):\n";
     for ( size_t i=0; i < rows; ++i ) {
         for ( size_t j=0; j < cols; ++j ) {
             int u=mt[i][j];
@@ -60,8 +71,8 @@ int main()
 
     for ( size_t i=0; i < rows; ++i ) {
         for ( size_t j=0; j < cols; ++j ) {
-            mt_eq[i][j]= mt[i][j];
-            mt_ne[i][j] = -5;
+            mt_eq.set(i,j, mt[i][j]);
+            mt_ne.set(i, j, -5);
         }
     }
     std::cout << "\n";
@@ -101,17 +112,29 @@ int main()
 
     // тест на исключения
     try {
-        mt[20][ 1]=0;
+        mt.set(20, 1, 0);
     }
     catch ( std::out_of_range ) {
-        std::cout << "exception for mt[20, 1]=0; catched!\n";
+        std::cout << "exception for mt.set(20, 1, 0); catched!\n";
     }
     try {
-        mt[-20][-1]=0;
+        mt.set(-20, -1, 0);
     }
     catch ( std::out_of_range ) {
-        std::cout << "exception for mt[-20, -1]=0; catched!\n";
+        std::cout << "exception for mt.set(-20, -1, 0); catched!\n";
+    }
+    try {
+        int k=mt[40][5];
+    }
+    catch ( std::out_of_range ) {
+        std::cout << "exception for k=mt[40][5]; catched!\n";
     }
 
+    try {
+        int k=mt[-1][2];
+    }
+    catch ( std::out_of_range ) {
+        std::cout << "exception for k=mt[-1][2]; catched!\n";
+    }
 }
 
