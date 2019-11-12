@@ -8,7 +8,7 @@
 
 int main()
 {
-    // тестрование на числах int64_t (не более 0xffffffffffffff)
+    // тестирование на числах int64_t (не более 0xffffffffffffff)
     int64_t ai= 0xf0f1f2f3f4f5f6;
     int64_t bi=-0x75da61fc20a68d;
     int64_t ci= 0x32536fda54cb46;
@@ -80,7 +80,6 @@ int main()
     std::cout << "m:" << std::endl;
     std::cout << "    " << "m =-g ; m =-(( m -=f )+=c ); m = " << m << std::endl;
     std::cout << "    " << "mi=-gi; mi=-(( mi-=fi)+=ci); mi= " << ( mi < 0 ? "-" : "" ) << std::hex << std::abs(mi) << std::endl;
-
 
 }
 

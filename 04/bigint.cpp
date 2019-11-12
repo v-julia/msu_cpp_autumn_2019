@@ -24,6 +24,14 @@ BigInt::BigInt(const BigInt& val)
     std::copy(val.uints, val.uints + uints_size, uints);
     isNegative=val.isNegative;
 }
+ BigInt::BigInt(BigInt&& moved) noexcept
+    : uints(moved.uints),
+    uints_size(moved.uints_size),
+    isNegative(moved.isNegative)
+ {
+    moved.uints=nullptr;
+    moved.uints_size=0;
+}
 
 
 BigInt& BigInt::operator=(const BigInt& copied)
@@ -50,6 +58,18 @@ BigInt& BigInt::operator=(const BigInt& copied)
         }
         isNegative=copied.isNegative;
     }
+    return *this;
+}
+// перемещение по образцу как в лекции 5 для Buffer
+BigInt& BigInt::operator=(BigInt&& moved) noexcept
+{
+    if ( this == &moved ) return *this;
+    delete[]  uints;
+    uints=moved.uints;
+    uints_size=moved.uints_size;
+    moved.uints=nullptr;
+    moved.uints_size=0;
+    isNegative=moved.isNegative;
     return *this;
 }
 

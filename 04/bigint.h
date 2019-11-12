@@ -27,7 +27,7 @@ public:
     
     const static size_t sz_digit=sizeof(uint8_t);
 
-    // для uint запоминается максимальная цифра (для сложения-вычитfния цифр) 
+    // для uint запоминается максимальная цифра (для сложения-вычитания цифр) 
     
     const static unsigned int max_digit=std::numeric_limits<uint8_t>::max();
 
@@ -36,6 +36,8 @@ public:
 
     BigInt(int64_t value=0);
     BigInt(const BigInt& val);
+    // перемещение
+    BigInt(BigInt&& moved) noexcept;
 
     ~BigInt();
 
@@ -45,6 +47,8 @@ public:
 
     // присваивания
     BigInt& operator=(const BigInt& copied);     // копирующий 
+    // перемещение
+    BigInt& operator=(BigInt&& moved) noexcept;
 
     // 1
     friend std::ostream& operator<<(std::ostream& os, const BigInt& val);
