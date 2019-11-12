@@ -29,7 +29,7 @@ public:
     }
 
 private:
-    // process использует variadic templates
+    // process uses variadic templates
     template <class T>
     Error process(T&& val)
     {
@@ -94,7 +94,7 @@ public:
     }
 
 private:
-    // process использует variadic templates
+    // process uses variadic templates
     template <class T>
     Error process(T&& val)
     {
