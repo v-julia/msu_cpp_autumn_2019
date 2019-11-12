@@ -33,6 +33,63 @@ BigInt::BigInt(const BigInt& val)
     moved.uints_size=0;
 }
 
+BigInt::BigInt(const std::string& hex_str)
+{
+    size_t len=hex_str.size();
+    size_t lenx=0;
+    size_t c_count=2 * sz_digit; // количество 16-х цифр (0, 1, 2,  E, F) для отображения большой цифры
+    isNegative=false;
+    // вначале поиск знака числа, он должен быть первым (не 16-м) символом
+    bool sign_fnd=false;
+    for ( int i=0; i < len; ++i ) {
+        if ( ' ' == hex_str[i] ) continue;
+        if ( !sign_fnd ) {
+            sign_fnd=true;
+            if ( '-' == hex_str[i] ) {
+                isNegative=true;
+            }
+            else if ( !( 0 == std::isxdigit(static_cast<unsigned char>( hex_str[i] )) ) ) {
+                ++lenx;
+            }
+        }
+        else {
+            if ( !( 0 == std::isxdigit(static_cast<unsigned char>( hex_str[i] )) ) ) ++lenx;
+        }
+    }
+    // перекодировка 16-х символов в одну digit (неверные символы пропустить)
+    if ( lenx > 0 ) {
+        size_t ostatok=lenx % c_count;
+        lenx/=c_count;
+        if ( ostatok > 0 ) ++lenx;
+        uints=new uint8_t[lenx];
+        size_t cnt=0;
+        size_t idx_x=lenx - 1; // самый последний индекс набора чисел my_uints
+        std::string sx="";
+        for ( auto c : hex_str ) {
+            if ( 0 == std::isxdigit(static_cast<unsigned char>( c )) ) continue;
+            sx+=c;
+            ++cnt;
+            if ( cnt == c_count ) {
+                uints[idx_x]=uint8_t(std::stoul(sx, nullptr, 16));
+                unsigned int test=uints[idx_x];
+                sx.clear();
+                --idx_x;
+                cnt=0;
+            }
+        }
+        if ( cnt > 0 ) {
+            uints[idx_x]=uint8_t(std::stoul(sx, 0, 16));
+        }
+        uints_size=lenx;
+    }
+    else {
+        // при неверных данных сделать нулем
+        uints=new uint8_t[1];
+        uints[0]=0;
+        isNegative=false;
+        uints_size=1;
+    }
+}
 
 BigInt& BigInt::operator=(const BigInt& copied)
 {
@@ -339,67 +396,4 @@ void BigInt::dif_abs(const BigInt& other)
     }
     isNegative=!isOtherLessOrEq; // знак тоже здесь устанавливается 
 }
-
-
-
-
-
-BigInt::BigInt(const std::string& hex_str)
-{
-    size_t len=hex_str.size();
-    size_t lenx=0;
-    size_t c_count=2 * sz_digit; // количество 16-х цифр (0, 1, 2,  E, F) для отображения большой цифры
-    isNegative=false;
-    // вначале поиск знака числа, он должен быть первым (не 16-м) символом
-    bool sign_fnd=false;
-    for ( int i=0; i < len; ++i ) {
-        if ( ' ' == hex_str[i] ) continue;
-        if ( !sign_fnd ) {
-            sign_fnd=true;
-            if ( '-' == hex_str[i] ) {
-                isNegative=true;
-            }
-            else if ( !( 0 == std::isxdigit(static_cast<unsigned char>( hex_str[i] )) ) ) {
-                ++lenx;
-            }
-        }
-        else {
-            if ( !( 0 == std::isxdigit(static_cast<unsigned char>( hex_str[i] )) ) ) ++lenx;
-        }
-    }
-    // перекодировка 16-х символов в одну digit (неверные символы пропустить)
-    if ( lenx > 0 ) {
-        size_t ostatok=lenx % c_count;
-        lenx/=c_count;
-        if ( ostatok > 0 ) ++lenx;
-        uints=new uint8_t[lenx];
-        size_t cnt=0;
-        size_t idx_x=lenx - 1; // самый последний индекс набора чисел my_uints
-        std::string sx="";
-        for ( auto c : hex_str ) {
-            if ( 0 == std::isxdigit(static_cast<unsigned char>( c )) ) continue;
-            sx+=c;
-            ++cnt;
-            if ( cnt == c_count ) {
-                uints[idx_x]=uint8_t(std::stoul(sx, nullptr, 16));
-                unsigned int test=uints[idx_x];
-                sx.clear();
-                --idx_x;
-                cnt=0;
-            }
-        }
-        if ( cnt > 0 ) {
-            uints[idx_x]=uint8_t(std::stoul(sx, 0, 16));
-        }
-        uints_size=lenx;
-    }
-    else {
-        // при неверных данных сделать нулем
-        uints=new uint8_t[1];
-        uints[0]=0;
-        isNegative=false;
-        uints_size=1;
-    }
-}
-
 
