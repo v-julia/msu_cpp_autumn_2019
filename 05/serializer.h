@@ -33,37 +33,50 @@ private:
     template <class T>
     Error process(T&& val)
     {
-        if (std::is_same<T, uint64_t&>::value) {
+        //if (std::is_same<T, uint64_t&>::value) {
 
-            out_ << val << Separator;
-        }
-        else if (std::is_same<T, bool&>::value) {
+        //    out_ << val << Separator;
+        //}
+        //else if (std::is_same<T, bool&>::value) {
 
-            out_ << (val ? "true" : "false") << Separator;
-        }
-        else {
-            return Error::CorruptedArchive;
-        }
-        return Error::NoError;
+        //    out_ << (val ? "true" : "false") << Separator;
+        //}
+        //else {
+        //    return Error::CorruptedArchive;
+        //}
+        //return Error::NoError;
+        if (! (print_stream(val) == Error::NoError)) return Error::CorruptedArchive;
+
 
     }
 
     template <class T, class... Args>
     Error process(T&& val, Args&&... args)
     {
-        if (std::is_same<T, uint64_t&>::value) {
+        //if (std::is_same<T, uint64_t&>::value) {
 
-            out_ << val << Separator;
-        }
-        else if (std::is_same<T, bool&>::value) {
+        //    out_ << val << Separator;
+        //}
+        //else if (std::is_same<T, bool&>::value) {
 
-            out_ << (val ? "true" : "false") << Separator;
-        }
-        else {
-            return Error::CorruptedArchive;
-        }
+        //    out_ << (val ? "true" : "false") << Separator;
+        //}
+        //else {
+        //    return Error::CorruptedArchive;
+        //}
+        if (! (print_stream(val) == Error::NoError)) return Error::CorruptedArchive;
 
         process(std::forward<Args>(args)...);
+        return Error::NoError;
+    }
+
+    Error print_stream(uint64_t& value) {
+        out_ << value << Separator;
+        return Error::NoError;
+    }
+
+    Error print_stream(bool& value) {
+        out_ << (value ? "true" : "false") << Separator;
         return Error::NoError;
     }
 };
@@ -113,7 +126,7 @@ private:
     {
         in_stream_ >> value;
 
-        if (in_stream_.good()) {
+        if (in_stream_) {
             return Error::NoError;
         }
         else {
@@ -157,3 +170,4 @@ struct Data
         return deserializer(a, b, c);
     }
 };
+#pragma once
