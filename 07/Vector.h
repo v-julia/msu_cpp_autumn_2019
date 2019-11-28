@@ -92,19 +92,19 @@ public:
 
     iterator begin() noexcept { return iterator(begin_ptr); }
 
-    const_iterator сbegin() const noexcept { return iterator(begin_ptr); };
+    const_iterator cbegin() const noexcept { return iterator(begin_ptr); };
 
     iterator end() noexcept { return end_ptr; }
 
-    const_iterator сend() const noexcept { return end_ptr; }
+    const_iterator cend() const noexcept { return end_ptr; }
 
     reverse_iterator rbegin()  noexcept { return reverse_iterator(end()); }
 
     reverse_iterator rend()  noexcept { return reverse_iterator(begin()); }
 
-    const_reverse_iterator сrbegin() const noexcept { return reverse_iterator(сend()); }
+    const_reverse_iterator crbegin() const noexcept { return reverse_iterator(cend()); }
 
-    const_reverse_iterator сrend() const noexcept { return reverse_iterator(сbegin()); }
+    const_reverse_iterator crend() const noexcept { return reverse_iterator(cbegin()); }
 
 
 
