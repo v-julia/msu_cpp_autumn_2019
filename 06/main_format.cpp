@@ -11,7 +11,7 @@ template <typename T>
 void GetVectArgs(std::vector<std::string>& vs, T&& arg)
 {
     std::ostringstream oss;
-    oss << arg;
+    oss << std::forward<T>(arg);
     if ( !oss ) {
         throw std::runtime_error("input Arg Error");
     }
@@ -85,7 +85,7 @@ std::string format(const std::string& inStr, Args&&... args)
 {
     std::vector<std::string> vs;
 
-    GetVectArgs(vs, args...);
+    GetVectArgs(vs, std::forward<Args>(args)...);
 
     return InsertArgs(inStr, vs);
 
@@ -99,8 +99,10 @@ int main()
     std::string ss;
     std::string s;
 
-    int a = 3;
-
+    const int& a = 3;
+    const std::string&& name = "Petya";
+    const std::string& curr = "dollars";
+    int cnt = 100;
 
 
     std::cout << "\n" << "Test ONE. Correctly" << "\n";
@@ -108,9 +110,11 @@ int main()
     s = "This is {0}. {0} bought {1} shares for {2} {3}. {0} lost {4} {3}. {0} is smart. Be like {0}!";
     std::cout << "Original string:" << "\n";
     std::cout << s << "\n";
-    std::cout << "Format command : ss = format(s, 'Petya', 100, a, 'dollars', 100 * 3);" << "\n";
+    std::cout << "Format command : ss = format(s, name, 100, a, 'dollars', 100 * a);" << "\n";
 
-    ss = format(s, "Petya", 100, a, "dollars", 100 * a);
+
+    ss = format(s, name, cnt, a, curr, cnt * a);
+
 
     std::cout << "Formated string:" << "\n";
     std::cout << ss << "\n";
@@ -121,7 +125,12 @@ int main()
     std::cout << "\n" << "\n" << "Test TWO. Exception" << "\n";
     try {
         s = "This is {0}. {0} bought {1} shares for {12} {3}. {0} lost {4} {3}. {0} is smart. Be like {0}!";
-        ss = format(s, "Petya", 100, a, "dollars", 100 * a);
+
+
+        ss = format(s, name, cnt, a, curr, cnt * a);
+
+
+
     }
     catch ( std::runtime_error & er ) {
         std::cout << "catched: " << er.what() << "\n";
@@ -133,7 +142,12 @@ int main()
     std::cout << "\n" << "\n" << "Test THREE. Exception" << "\n";
     try {
         s = "This is {0}. {0} bought {1} shares for {2} {3}. {0} lost {4} {3}. {0} is smart. Be like {0!";
-        ss = format(s, "Petya", 100, a, "dollars", 100 * a);
+
+
+        ss = format(s, name, cnt, a, curr, cnt * a);
+
+
+
     }
     catch ( std::runtime_error & er ) {
         std::cout << "catched: " << er.what() << "\n";
@@ -145,7 +159,12 @@ int main()
     std::cout << "\n" << "\n" << "Test FOUR. Exception" << "\n";
     try {
         s = "This is {0}. {{0} bought {1} shares for {2} {3}. {0} lost {4} {3}. {0} is smart. Be like {0!";
-        ss = format(s, "Petya", 100, a, "dollars", 100 * a);
+
+
+        ss = format(s, name, cnt, a, curr, cnt * a);
+
+
+
     }
     catch ( std::runtime_error & er ) {
         std::cout << "catched: " << er.what() << "\n";
