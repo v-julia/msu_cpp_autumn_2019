@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include <iterator>
+#include "Iterator.h"
+#include "Allocator.h"
 
 
-
-template <class T, class Alloc = std::allocator<T> >
+template <class T, class Alloc = Allocator<T> >
 class Vector
 {
 private:
@@ -19,47 +19,67 @@ public:
     using const_reference = const T&;
     using allocator_type = Alloc;
 
-    using iterator = T*;
+    using iterator = Iterator<T>;
     using const_iterator = const iterator;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
-    pointer begin_ptr;
-    pointer end_ptr;
-    pointer capacity_ptr;
-
+    pointer data_;
+    size_type size_;
+    size_type capacity_;
 
 public:
 
     // конструкторы 
 
-    Vector() : begin_ptr(nullptr), end_ptr(nullptr), capacity_ptr(nullptr) {}
+    Vector() : data_(nullptr), size_(0), capacity_(0) {}
 
     explicit Vector(size_type count) : Vector<T>(count, T()) {}
 
     Vector(size_type count, const value_type& value)
     {
-        begin_ptr = alloc_.allocate(count);
-        end_ptr = std::uninitialized_fill_n(begin_ptr, count, value);
-        capacity_ptr = begin_ptr + count;
+        size_ = count;
+        capacity_ = 2 * count;
+        data_ = alloc_.allocate(capacity_);
+        auto current = begin();
+        while ( current != end() ) {
+            *current = value;
+            ++current;
+        }
     }
 
-    Vector(std::initializer_list<T> initializer)
+    Vector(std::initializer_list<T> init)
     {
-        allocate_and_copy(initializer.begin(), initializer.end());
+        size_type i = 0;
+        auto current = init.begin();
+        const auto end = init.end();
+        size_ = init.size();
+        capacity_ = 2 * size_;
+        data_ = alloc_.allocate(capacity_);
+        while ( current != end ) {
+            data_[i++] = *current++;
+        }
     }
 
     Vector(const Vector<T>& other)
     {
-        allocate_and_copy(other.cbegin(), other.cend());
+        size_type i = 0;
+        auto current = other.cbegin();
+        auto end = other.cend();
+        capacity_ = other.capacity_;
+        size_ = other.size_;
+        resize(capacity_);
+        while ( current != end ) {
+            data_[i++] = *current++;
+        }
     }
 
-    Vector(Vector<T>&& other) noexcept : begin_ptr(other.begin_ptr), end_ptr(other.end_ptr), capacity_ptr(other.capacity_ptr)
+    Vector(Vector<T>&& other) noexcept : data_(other.data_), size_(other.size_), capacity_(other.capacity_)
     {
-        other.begin_ptr = nullptr;
-        other.end_ptr = nullptr;
-        other.capacity_ptr = nullptr;
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
     }
 
     Vector<T>& operator=(const Vector<T>& other)
@@ -73,12 +93,9 @@ public:
     {
         if ( this != &other ) {
             deallocate();
-            begin_ptr = other.begin_ptr;
-            end_ptr = other.end_ptr;
-            capacity_ptr = other.capacity_ptr;
-            other.begin_ptr = nullptr;
-            other.end_ptr = nullptr;
-            other.capacity_ptr = nullptr;
+            data_ = other.data_;
+            size_ = other.size_;
+            capacity_ = other.capacity_;
         }
         return *this;
     }
@@ -90,36 +107,36 @@ public:
 
     // методы: begin, end, rbegin, rend
 
-    iterator begin() noexcept { return iterator(begin_ptr); }
+    iterator begin() noexcept { return iterator(data_); }
 
-    const_iterator cbegin() const noexcept { return iterator(begin_ptr); };
+    const_iterator сbegin() const noexcept { return iterator(data_); };
 
-    iterator end() noexcept { return end_ptr; }
+    iterator end() noexcept { return iterator(data_ + size_); }
 
-    const_iterator cend() const noexcept { return end_ptr; }
+    const_iterator сend() const noexcept { return iterator(data_ + size_); }
 
     reverse_iterator rbegin()  noexcept { return reverse_iterator(end()); }
 
     reverse_iterator rend()  noexcept { return reverse_iterator(begin()); }
 
-    const_reverse_iterator crbegin() const noexcept { return reverse_iterator(cend()); }
+    const_reverse_iterator сrbegin() const noexcept { return reverse_iterator(сend()); }
 
-    const_reverse_iterator crend() const noexcept { return reverse_iterator(cbegin()); }
+    const_reverse_iterator сrend() const noexcept { return reverse_iterator(сbegin()); }
 
 
 
     // методы: [], at
 
-    reference operator[](size_type idx) { return begin_ptr[idx]; }
+    reference operator[](size_type idx) { return data_[idx]; }
 
-    const_reference operator[](size_type idx) const { return begin_ptr[idx]; }
+    const_reference operator[](size_type idx) const { return data_[idx]; }
 
     reference at(size_type idx)
     {
         if ( idx < 0 || idx >= size() ) {
             throw std::out_of_range("Invalid index");
         }
-        return begin_ptr[idx];
+        return data_[idx];
     }
 
     const_reference at(size_type idx) const
@@ -127,19 +144,26 @@ public:
         if ( idx < 0 || idx >= size() ) {
             throw std::out_of_range("Invalid index");
         }
-        return begin_ptr[idx];
+        return data_[idx];
     }
 
 
     // методы: push_back, pop_back
 
-    template<typename... Args>
-    void emplace_back(Args&&... args)
+    void emplace_back(T&& val)
     {
-        reallocate_if_full();
+        if ( size_ == capacity_ ) {
+            size_type new_capacity = ( size_ != 0 ) ? 2 * size_ : 1;
+            reallocate(new_capacity);
+        }
+        data_[size_++] = std::move(val);
+    }
 
-        std::allocator_traits<Alloc>::construct(alloc_, end_ptr, std::forward<Args>(args)...);
-        ++end_ptr;
+    template<typename... Args>
+    void emplace_back(T&& val, Args&&... args)
+    {
+        emplace_back(std::forward<T>(val));
+        emplace_back(std::forward<Args>(args)...);
     }
 
     void push_back(const value_type& value) { emplace_back(value); }
@@ -148,17 +172,19 @@ public:
 
     void pop_back()
     {
-        --end_ptr;
-        std::allocator_traits<Alloc>::destroy(alloc_, end_ptr);
+        if ( size_ > 0 ) {
+            data_[size_ - 1].~T();
+            size_--;
+        }
     }
 
     // методы: size, resize, reserve, clear
 
-    size_type size() const noexcept { return static_cast<size_type>( end_ptr - begin_ptr ); }
+    size_type size() const noexcept { return size_; }
 
-    bool empty() const noexcept { return size() == 0; }
+    bool empty() const noexcept { return size_ == 0; }
 
-    size_type capacity() const noexcept { return static_cast<size_type>( capacity_ptr - begin_ptr ); }
+    size_type capacity() const noexcept { return capacity_; }
 
     void reserve(size_type new_capacity)
     {
@@ -170,39 +196,43 @@ public:
 
     void resize(size_type new_size, const_reference value)
     {
-        if ( new_size > capacity() ) {
-            reallocate(2 * new_size);
-            end_ptr = std::uninitialized_fill_n(end_ptr, new_size - size(), value);
-        }
-        else if ( new_size > size() ) {
-            end_ptr = std::uninitialized_fill_n(end_ptr, new_size - size(), value);
+        if ( new_size > size() ) {
+            if ( new_size > capacity() ) {
+                reallocate(2 * new_size);
+            }
+            size_type i = size_;
+            while ( i < new_size ) {
+                data_[i++] = value;
+            }
+            size_ = new_size;
         }
         else if ( new_size < size() ) {
-            for ( size_type i = 0; i < size() - new_size; ++i ) {
-                --end_ptr;
-                std::allocator_traits<Alloc>::destroy(alloc_, end_ptr);
+            for ( size_type i = new_size; i < size(); ++i ) {
+                data_[i].~T();
             }
+            size_ = new_size;
         }
     }
 
-    void resize(size_type new_size) { resize(new_size, T()); }
+    void resize(size_type new_size) { 
+        resize(new_size, T()); 
+    }
 
-    void shrink_to_fit() { reallocate(size()); }
+    void shrink_to_fit() { 
+        reallocate(size()); 
+    }
 
 
     void clear() noexcept
     {
-        deallocate();
-        begin_ptr = nullptr;
-        end_ptr = nullptr;
-        capacity_ptr = nullptr;
+        resize(0);
     }
 
     void swap(Vector<T>& vector) noexcept
     {
-        std::swap(this->begin_ptr, vector.begin_ptr);
-        std::swap(this->end_ptr, vector.end_ptr);
-        std::swap(this->capacity_ptr, vector.capacity_ptr);
+        std::swap(this->data_, vector.data_);
+        std::swap(this->size_, vector.size_);
+        std::swap(this->capacity_, vector.capacity_);
     }
 
 
@@ -210,40 +240,22 @@ private:
 
     void reallocate(size_type new_capacity)
     {
-        T* new_begin_ptr = alloc_.allocate(new_capacity);
-
-        T* new_end_ptr = std::uninitialized_copy(std::make_move_iterator(begin()), std::make_move_iterator(end()), new_begin_ptr);
-
+        pointer newData = alloc_.allocate(new_capacity);
+        std::copy(data_, data_ + size_, newData);
         deallocate();
-
-        begin_ptr = new_begin_ptr;
-        end_ptr = new_end_ptr;
-        capacity_ptr = begin_ptr + new_capacity;
-    }
-
-    void reallocate_if_full()
-    {
-        if ( size() == capacity() ) {
-            size_type new_capacity = ( size() != 0 ) ? 2 * size() : 1;
-            reallocate(new_capacity);
-        }
+        data_ = newData;
+        capacity_ = new_capacity;
     }
 
     void deallocate()
     {
-        if ( begin_ptr ) {
-            std::for_each(begin_ptr, end_ptr,
-                          [&alloc_ = alloc_](T& value) { std::allocator_traits<Alloc>::destroy(alloc_, &value); });
-            alloc_.deallocate(begin_ptr, capacity_ptr - begin_ptr);
+        if ( data_ ) {
+            size_type i=0;
+            while ( i<size_ ) {
+                data_[i++].~T();
+            }
+            alloc_.deallocate(data_, capacity_);
         }
-    }
-
-    void allocate_and_copy(const_iterator begin, const_iterator end)
-    {
-        size_type new_capacity = end - begin;
-        begin_ptr = alloc_.allocate(new_capacity);
-        end_ptr = std::uninitialized_copy(begin, end, begin_ptr);
-        capacity_ptr = end_ptr;
     }
 
 };
