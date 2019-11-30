@@ -35,12 +35,21 @@ public:
 
     Vector() : data_(nullptr), size_(0), capacity_(0) {}
 
-    explicit Vector(size_type count) : Vector<T>(count, T()) {}
+    explicit Vector(size_type count) {
+        size_ = count;
+        capacity_ = 2*count;
+        data_ = alloc_.allocate(capacity_);
+        auto current = begin();
+        while ( current != end() ) {
+            *current = T();
+            ++current;
+        }
+    }
 
     Vector(size_type count, const value_type& value)
     {
         size_ = count;
-        capacity_ = 2 * count;
+        capacity_ = 2*count;
         data_ = alloc_.allocate(capacity_);
         auto current = begin();
         while ( current != end() ) {
@@ -55,7 +64,7 @@ public:
         auto current = init.begin();
         const auto end = init.end();
         size_ = init.size();
-        capacity_ = 2 * size_;
+        capacity_ = 2*size_;
         data_ = alloc_.allocate(capacity_);
         while ( current != end ) {
             data_[i++] = *current++;
@@ -198,7 +207,7 @@ public:
     {
         if ( new_size > size() ) {
             if ( new_size > capacity() ) {
-                reallocate(2 * new_size);
+                reallocate(2*new_size);
             }
             size_type i = size_;
             while ( i < new_size ) {
@@ -210,12 +219,28 @@ public:
             for ( size_type i = new_size; i < size(); ++i ) {
                 data_[i].~T();
             }
+            reallocate(new_size);
             size_ = new_size;
         }
     }
 
     void resize(size_type new_size) { 
-        resize(new_size, T()); 
+        if ( new_size > size() ) {
+            if ( new_size > capacity() ) {
+                reallocate(2 * new_size);
+            }
+            size_type i = size_;
+            while ( i < new_size ) {
+                data_[i++] = T();
+            }
+            size_ = new_size;
+        }
+        else if ( new_size < size() ) {
+            for ( size_type i = new_size; i < size(); ++i ) {
+                data_[i].~T();
+            }
+            size_ = new_size;
+        }
     }
 
     void shrink_to_fit() { 

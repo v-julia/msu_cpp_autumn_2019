@@ -25,13 +25,13 @@ public:
     T* allocate(std::size_t n)
     {
         if ( n > (std::size_t(-1) / sizeof(T) ) ) throw std::bad_alloc();
-        return new T[n];
+        return static_cast<T*>(malloc(sizeof(T)*n));
     }
 
 
     void deallocate(pointer ptr, std::size_t count)
     {
-        delete[] ptr;
+        free(ptr);
     }
 
 
