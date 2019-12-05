@@ -35,13 +35,14 @@ public:
 
     Vector() : data_(nullptr), size_(0), capacity_(0) {}
 
-    explicit Vector(size_type count) {
+    explicit Vector(size_type count)
+    {
         size_ = count;
-        capacity_ = 2*count;
+        capacity_ = 2 * count;
         data_ = alloc_.allocate(capacity_);
-        auto current = begin();
-        while ( current != end() ) {
-            *current = T();
+        pointer current = data_;
+        for ( size_t i = 0; i < size_; ++i ) {
+            alloc_.construct(current, T());
             ++current;
         }
     }
@@ -49,11 +50,11 @@ public:
     Vector(size_type count, const value_type& value)
     {
         size_ = count;
-        capacity_ = 2*count;
+        capacity_ = 2 * count;
         data_ = alloc_.allocate(capacity_);
-        auto current = begin();
-        while ( current != end() ) {
-            *current = value;
+        pointer current = data_;
+        for ( size_t i = 0; i < size_; ++i ) {
+            alloc_.construct(current, value);
             ++current;
         }
     }
@@ -64,10 +65,13 @@ public:
         auto current = init.begin();
         const auto end = init.end();
         size_ = init.size();
-        capacity_ = 2*size_;
+        capacity_ = 2 * size_;
         data_ = alloc_.allocate(capacity_);
+        pointer dc = data_;
         while ( current != end ) {
-            data_[i++] = *current++;
+            alloc_.construct(dc, static_cast<T>(*current) );
+            ++current;
+            ++dc;
         }
     }
 
@@ -207,24 +211,30 @@ public:
     {
         if ( new_size > size() ) {
             if ( new_size > capacity() ) {
-                reallocate(2*new_size);
+                reallocate(2 * new_size);
             }
-            size_type i = size_;
-            while ( i < new_size ) {
-                data_[i++] = value;
+            pointer ptr = data_+size_;
+            pointer ptr_end = data_ + new_size;
+            while ( ptr < ptr_end ) {
+                alloc_.construct(ptr, static_cast<T>(value));
+                ++ptr;
             }
             size_ = new_size;
         }
         else if ( new_size < size() ) {
-            for ( size_type i = new_size; i < size(); ++i ) {
-                data_[i].~T();
+            pointer ptr = data_ + new_size;
+            pointer ptr_end = data_ + size_;
+            while ( ptr < ptr_end ) {
+                alloc_.destroy(ptr);
+                ++ptr;
             }
             reallocate(new_size);
             size_ = new_size;
         }
     }
 
-    void resize(size_type new_size) { 
+    void resize(size_type new_size)
+    {
         if ( new_size > size() ) {
             if ( new_size > capacity() ) {
                 reallocate(2 * new_size);
@@ -243,8 +253,9 @@ public:
         }
     }
 
-    void shrink_to_fit() { 
-        reallocate(size()); 
+    void shrink_to_fit()
+    {
+        reallocate(size());
     }
 
 
@@ -266,21 +277,26 @@ private:
     void reallocate(size_type new_capacity)
     {
         pointer newData = alloc_.allocate(new_capacity);
-        std::copy(data_, data_ + size_, newData);
+        size_type new_size = ( size_ <= new_capacity ) ? size_ : new_capacity;
+        pointer new_end = data_ + new_size;
+        std::copy(data_, new_end, newData);
         deallocate();
         data_ = newData;
+        size_ = new_size;
         capacity_ = new_capacity;
     }
 
     void deallocate()
     {
         if ( data_ ) {
-            size_type i=0;
-            while ( i<size_ ) {
-                data_[i++].~T();
+            pointer current = data_;
+            size_type i = 0;
+            for ( size_t i = 0; i < size_; ++i ) {
+                alloc_.destroy(current);
+                ++current;
             }
-            alloc_.deallocate(data_, capacity_);
         }
+        alloc_.deallocate(data_, capacity_);
     }
 
 };

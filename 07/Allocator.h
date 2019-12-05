@@ -19,21 +19,43 @@ public:
 
 
 public:
-    Allocator() = default;
+    constexpr Allocator() noexcept {}
+    constexpr Allocator(const Allocator&) noexcept = default;
     template <class U> constexpr Allocator(const Allocator<U>&) noexcept {}
+    
+    template <class U> struct rebind{ using other = Allocator<U>; };
 
-    T* allocate(std::size_t n)
+    T* address(T& value) const noexcept { return std::addressof(value); }
+    const T* address(const T& value) const noexcept {return std::addressof(value);}
+    
+
+    T* allocate(size_t n)
     {
-        if ( n > (std::size_t(-1) / sizeof(T) ) ) throw std::bad_alloc();
-        return static_cast<T*>(malloc(sizeof(T)*n));
+        if ( n > max_size() )
+            throw std::bad_alloc();
+        return static_cast<T*>( ::operator new( sizeof(T) * n ) );
+    }
+    T* allocate(size_t n, const void*) { return allocate( n); }
+
+
+    void deallocate(pointer ptr, size_t count)
+    {
+        ::operator delete( ptr, sizeof(T) * count );
     }
 
 
-    void deallocate(pointer ptr, std::size_t count)
+    void construct(T* const ptr, T&& value)
     {
-        free(ptr);
+        ::new ( const_cast<void*>( static_cast<const volatile void*>( ptr ) ) ) T(std::forward<T>(value));
     }
 
+    void destroy(T* const ptr) { ptr->~T(); };
+    
+
+    size_t max_size() const noexcept
+    {
+        return static_cast<size_t>( -1 ) / sizeof(T);
+    }
 
 
 };
