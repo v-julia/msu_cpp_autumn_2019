@@ -69,7 +69,7 @@ public:
         data_ = alloc_.allocate(capacity_);
         pointer dc = data_;
         while ( current != end ) {
-            alloc_.construct(dc, static_cast<T>(*current) );
+            alloc_.construct(dc, static_cast<T>( *current ));
             ++current;
             ++dc;
         }
@@ -78,13 +78,12 @@ public:
     Vector(const Vector<T>& other)
     {
         size_type i = 0;
-        auto current = other.cbegin();
-        auto end = other.cend();
         capacity_ = other.capacity_;
+        data_ = alloc_.allocate(capacity_);
         size_ = other.size_;
-        resize(capacity_);
-        while ( current != end ) {
-            data_[i++] = *current++;
+        while ( i < size_ ) {
+            data_[i] = other[i];
+            ++i;
         }
     }
 
@@ -140,9 +139,10 @@ public:
 
     // методы: [], at
 
-    reference operator[](size_type idx) { return data_[idx]; }
+    reference operator[](const size_type idx) noexcept { return data_[idx]; }
 
-    const_reference operator[](size_type idx) const { return data_[idx]; }
+    const_reference operator[](const size_type idx) const { return data_[idx]; }
+
 
     reference at(size_type idx)
     {
@@ -213,10 +213,10 @@ public:
             if ( new_size > capacity() ) {
                 reallocate(2 * new_size);
             }
-            pointer ptr = data_+size_;
+            pointer ptr = data_ + size_;
             pointer ptr_end = data_ + new_size;
             while ( ptr < ptr_end ) {
-                alloc_.construct(ptr, static_cast<T>(value));
+                alloc_.construct(ptr, static_cast<T>( value ));
                 ++ptr;
             }
             size_ = new_size;
@@ -276,14 +276,21 @@ private:
 
     void reallocate(size_type new_capacity)
     {
-        pointer newData = alloc_.allocate(new_capacity);
-        size_type new_size = ( size_ <= new_capacity ) ? size_ : new_capacity;
-        pointer new_end = data_ + new_size;
-        std::copy(data_, new_end, newData);
-        deallocate();
-        data_ = newData;
-        size_ = new_size;
-        capacity_ = new_capacity;
+        if ( new_capacity == 0 ) {
+            deallocate();
+        }
+        else {
+            pointer newData = alloc_.allocate(new_capacity);
+            size_type new_size = ( size_ <= new_capacity ) ? size_ : new_capacity;
+            if ( data_ ) {
+                std::memcpy(newData, data_, sizeof(T) * new_size);
+                deallocate();
+            }
+            data_ = newData;
+            size_ = new_size;
+            capacity_ = new_capacity;
+
+        }
     }
 
     void deallocate()
@@ -297,6 +304,9 @@ private:
             }
         }
         alloc_.deallocate(data_, capacity_);
+        data_ = nullptr;
+        size_ = 0;
+        capacity_ = 0;
     }
 
 };
