@@ -54,7 +54,10 @@ public:
             ::new ( ptr ) T(std::forward<T>(value));
     }
 
-    void destroy(T* const ptr) { if ( ptr ) ptr->~T(); };
+    void destroy(T* const ptr) {
+        if ( ptr ) 
+            ptr->~T(); 
+    };
 
 
     size_t max_size() const noexcept

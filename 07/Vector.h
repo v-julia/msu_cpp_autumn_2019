@@ -77,12 +77,14 @@ public:
 
     Vector(const Vector<T>& other)
     {
-        size_type i = 0;
         capacity_ = other.capacity_;
         data_ = alloc_.allocate(capacity_);
         size_ = other.size_;
+        pointer dc = data_;
+        size_type i = 0;
         while ( i < size_ ) {
-            data_[i] = other[i];
+            alloc_.construct(dc, static_cast<T>(other[i]));
+            ++dc;
             ++i;
         }
     }
@@ -112,7 +114,9 @@ public:
         return *this;
     }
 
-    ~Vector() { deallocate(); }
+    ~Vector() { 
+        deallocate(); 
+    }
 
 
 
@@ -167,9 +171,13 @@ public:
     {
         if ( size_ == capacity_ ) {
             size_type new_capacity = ( size_ != 0 ) ? 2 * size_ : 1;
-            reallocate(new_capacity);
+            reallocate(new_capacity); 
         }
-        data_[size_++] = std::move(val);
+        // size_ остался прежним, 
+        // но capacity_ может быть только больше или равно 1
+        pointer dc = data_+ size_;
+        alloc_.construct(dc, std::move(val));
+        ++size_;
     }
 
     template<typename... Args>
@@ -179,15 +187,20 @@ public:
         emplace_back(std::forward<Args>(args)...);
     }
 
-    void push_back(const value_type& value) { emplace_back(value); }
+    void push_back(const value_type& value) { 
+        emplace_back(static_cast<value_type>(value));
+    }
 
-    void push_back(value_type&& value) { emplace_back(std::move(value)); }
+    void push_back(value_type&& value) { 
+        emplace_back(std::move(value));
+    }
 
     void pop_back()
     {
         if ( size_ > 0 ) {
-            data_[size_ - 1].~T();
             size_--;
+            pointer ptr = data_ + size_;
+            alloc_.destroy(ptr);
         }
     }
 
@@ -201,9 +214,6 @@ public:
 
     void reserve(size_type new_capacity)
     {
-        if ( new_capacity <= capacity() ) {
-            return;
-        }
         reallocate(new_capacity);
     }
 
@@ -235,19 +245,24 @@ public:
 
     void resize(size_type new_size)
     {
-        if ( new_size > size() ) {
-            if ( new_size > capacity() ) {
+        if ( new_size > size_ ) {
+            if ( new_size > capacity_ ) {
                 reallocate(2 * new_size);
             }
-            size_type i = size_;
-            while ( i < new_size ) {
-                data_[i++] = T();
+            pointer ptr = data_ + size_;
+            pointer ptr_end = data_ + new_size;
+            while ( ptr < ptr_end ) {
+                alloc_.construct(ptr, static_cast<T>( T() ));
+                ++ptr;
             }
             size_ = new_size;
         }
         else if ( new_size < size() ) {
-            for ( size_type i = new_size; i < size(); ++i ) {
-                data_[i].~T();
+            pointer ptr = data_ + new_size;
+            pointer ptr_end = data_ + size_;
+            while ( ptr < ptr_end ) {
+                alloc_.destroy(ptr);
+                ++ptr;
             }
             size_ = new_size;
         }
@@ -255,7 +270,7 @@ public:
 
     void shrink_to_fit()
     {
-        reallocate(size());
+        reallocate(size_);
     }
 
 
