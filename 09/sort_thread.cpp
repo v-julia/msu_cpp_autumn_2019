@@ -60,7 +60,7 @@ void merge_parts(std::string& p1fn, std::string& p2fn, std::string& outfn);
 
 
 // слияние массива отсортированных чисел и файла с упорядоченными числами
-void merge_array_with_part(uint64_t dat[], size_t cnt, std::string& pfn, std::string& outfn);
+void merge_array_with_part(std::unique_ptr<uint64_t[]>& dat, size_t cnt, std::string& pfn, std::string& outfn);
 
 
 const size_t cnt_block = 393216; // размер блока в количестве чисел типа uint64_t
@@ -172,7 +172,9 @@ int main()
 
 void sort_uint64(std::ifstream& for_sort)
 {
-    uint64_t* dat = new uint64_t[cnt_block];
+    
+    std::unique_ptr<uint64_t[]> dat(new uint64_t[cnt_block]);
+    //uint64_t* dat = new uint64_t[cnt_block];
     size_t sz = sizeof(uint64_t);
     while ( !for_sort.eof() ) {
         size_t cnt = 0;
@@ -187,7 +189,7 @@ void sort_uint64(std::ifstream& for_sort)
 
         // упорядочить dat
         if ( cnt > 0 ) {
-            qsort(dat, cnt, sz, [](const void* a, const void* b) {
+            qsort(static_cast<void*>(dat.get()), cnt, sz, [](const void* a, const void* b) {
                 uint64_t arg1 = *static_cast<const uint64_t*>( a );
                 uint64_t arg2 = *static_cast<const uint64_t*>( b );
                 if ( arg1 < arg2 ) return -1;
@@ -272,7 +274,7 @@ void sort_uint64(std::ifstream& for_sort)
         }
     }
 
-    delete[] dat;
+    //delete[] dat;
 }
 
 
@@ -319,7 +321,7 @@ void merge_parts(std::string& p1fn, std::string& p2fn, std::string& outfn)
     remove(p2fn.c_str());
 }
 
-void merge_array_with_part(uint64_t dat[], size_t cnt, std::string& pfn, std::string& outfn)
+void merge_array_with_part(std::unique_ptr<uint64_t[]>& dat, size_t cnt, std::string& pfn, std::string& outfn)
 {
     std::ifstream partfile;
     std::ofstream outfile;
